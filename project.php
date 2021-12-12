@@ -5,7 +5,7 @@
 Bonus effectués : 
 - image resize
 - padding
-- commande -h ou --help avec couleurs (+ MAGNIFIQUE ascii art)
+- commande -h ou --help (avec couleurs)
 - création automatiquement d'un dossier résultat (s'il n'existe pas) pour stocker css/png
 - choix du nom de la classe CSS
 
@@ -66,7 +66,6 @@ function initProcess()
 // Entry point
 $args = initProcess();
 
-// Mini-bonus
 if(isset($args['h']) || isset($args['help']))
 {
     echo "\e[35m
@@ -199,8 +198,7 @@ if(isset($args['c']) || isset($args['columns_number']))
         $columns_number = $args['columns_number-size'];
 }
 
-// CSS class name
-// TODO : REGEX CHECK FOR CLASS NAMEEEE
+// TODO : REGEX CHECK FOR CLASS NAME
 if(isset($args['n']) || isset($args['class_name']))
 {
     if(isset($args['n']))
@@ -246,7 +244,7 @@ foreach($tab as $key => $val)
     if($padding)
         $totalY += $padding;
 
-    // On veut du padding qu'entre les éléments, pas sur le dernier Michel !
+    // On veut du padding qu'entre les éléments
     if($padding && array_key_last($tab) == $key)
         $totalY -= $padding;
 
@@ -274,7 +272,7 @@ foreach($tab as $key => $val)
     // Sprite temporaire contenant image + marge
     $imgX = imagesx($spriteComplet) - imagesx($imgTmp);
 
-    // On veut du padding qu'entre les éléments, pas sur le dernier Michel !
+    // On veut du padding qu'entre les éléments
     if($padding && array_key_last($tab) == $key)
         $sprite = imagecreatetruecolor(imagesx($spriteComplet), imagesy($imgTmp)+$padding);
     else
@@ -293,18 +291,26 @@ foreach($tab as $key => $val)
  
     $posY += imagesy($sprite);
     
-    // On pense encore à libérer la mémoire nah mais oh !
     imagedestroy($sprite);
     imagedestroy($imgTmp);
 }
 
-if(!is_dir("./resultat")) // On vérifie que le dossier "resultat existe bien, et sinon on le créer
-    mkdir("resultat");
-
+if(!is_dir("./resultat"))
+{
+    if(mkdir("resultat") == false)
+    {
+        echo "\e[31m''resultat'' directory creation failed !\n\e[0m";   
+        return;            
+    }
+}
+    
 // Enregistrer la sprite
-imagepng($spriteComplet, "resultat/$outputImage.png");
+if(imagepng($spriteComplet, "resultat/$outputImage.png") == false)
+{
+    echo "\e[31m$outputImage.png file generation failed !\n\e[0m";   
+    return;    
+}
 
-// Libérer la mémoire 
 imagedestroy($spriteComplet);
 
 // Créer fichier .css
@@ -320,9 +326,12 @@ $test = ".$class_name
 }";
 
 $css = fopen("./resultat/$outputStyle.css", "w");
-fwrite($css, $test);
+if(fwrite($css, $test) == false)
+{
+    echo "\e[31m$outputstyle.css file generation failed !\n\e[0m";   
+    return;
+}
 
-// Libérer la mémoire
 fclose($css);
 
     echo "\e[35m
